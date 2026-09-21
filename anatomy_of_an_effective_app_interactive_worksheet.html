@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Design: Anatomy of an Effective App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        
+        /* Print Styles - Crucial for Google Classroom Submission */
+        @media print {
+            body { background-color: white; font-size: 12pt; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .card { box-shadow: none !important; border: 1px solid #ccc; margin-bottom: 20px; break-inside: avoid; }
+            textarea { height: auto !important; border: none; border-bottom: 1px solid #000; resize: none; overflow: hidden; background: transparent; }
+            select { appearance: none; border: none; border-bottom: 1px solid #000; background: transparent; }
+            header { position: static !important; }
+            #dashboard-print-view { display: block !important; border: 2px solid #000; padding: 20px; margin-bottom: 20px; }
+        }
+
+        /* Animations & UI */
+        .glass-header { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .section-card { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; border: 2px solid transparent;}
+        .section-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .section-active { border-color: #3b82f6; } /* Tailwind blue-500 */
+        
+        .pulse-glow { animation: pulseGlow 2s infinite; }
+        @keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 17px; }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+    </style>
+</head>
+<body class="text-gray-800 pb-20">
+
+    <header class="glass-header sticky top-0 z-50 border-b border-gray-200 shadow-sm w-full">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-mobile-screen text-blue-600 text-2xl"></i>
+                <h1 class="font-bold text-xl hidden sm:block">App Design Lab</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-100 text-blue-800 px-4 py-1.5 rounded-full font-bold shadow-inner">
+                    <i class="fa-solid fa-star text-yellow-500 mr-1"></i> Score: <span id="global-score">0</span> / 60
+                </div>
+                <div id="active-timer-display" class="text-sm font-mono text-gray-500 bg-gray-100 px-3 py-1 rounded hidden sm:block">
+                    No active section
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        
+        <!-- Student Info -->
+        <section class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 card">
+            <h2 class="text-lg font-bold mb-4 border-b pb-2"><i class="fa-solid fa-user-astronaut text-purple-500 mr-2"></i>Mission Profile</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Student Name</label>
+                    <input type="text" id="student-name" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none" placeholder="Enter your name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Class/Section</label>
+                    <select id="student-class" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none">
+                        <option value="">Select Class...</option>
+                        <option>11 A</option><option>11 B</option><option>11 C</option>
+                        <option>11 F</option><option>11 G</option><option>11 H</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Date</label>
+                    <input type="date" id="student-date" class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none">
+                </div>
+            </div>
+        </section>
+
+        <!-- Learning Objectives -->
+        <section class="bg-blue-50 p-6 rounded-xl shadow-sm border border-blue-100 card">
+            <h2 class="text-lg font-bold text-blue-900 mb-2">🎯 Learning Objectives & Success Criteria</h2>
+            <p class="text-sm text-blue-800 mb-4">By the end of this mission, check these off if you feel confident:</p>
+            <div class="space-y-2">
+                <label class="flex items-center gap-3 p-2 bg-white rounded shadow-sm cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600 rounded">
+                    <span>I can identify the <strong>problem, inputs, and outputs (IPO)</strong> of a real-world app.</span>
+                </label>
+                <label class="flex items-center gap-3 p-2 bg-white rounded shadow-sm cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600 rounded">
+                    <span>I can use the terms <strong>authentic, verify,</strong> and <strong>legitimacy</strong> to assess credibility.</span>
+                </label>
+                <label class="flex items-center gap-3 p-2 bg-white rounded shadow-sm cursor-pointer hover:bg-gray-50">
+                    <input type="checkbox" class="w-5 h-5 text-blue-600 rounded">
+                    <span>I can explain the difference between a good and bad <strong>User Interface (UI)</strong> & <strong>User Experience (UX)</strong>.</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- SECTION 1: HOOK -->
+        <section id="sec-hook" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="120" onclick="activateSection('sec-hook')">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-hook"></div></div>
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-eye text-indigo-500 mr-2"></i>1. Mission Launch (Hook)</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500 badge hidden"><i class="fa-solid fa-check text-green-500"></i> Done</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 2:00</div>
+                </div>
+            </div>
+            
+            <p class="mb-4"><strong>Scenario:</strong> You need to enter your personal email and home location. Click the app you would trust the most.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div class="border rounded-xl p-4 hover:bg-gray-50 cursor-pointer hook-app" onclick="checkHook('trusted', this)">
+                    <i class="fa-solid fa-map-location-dot text-5xl text-green-600 mb-2"></i>
+                    <h3 class="font-bold">Global Maps</h3>
+                    <p class="text-xs text-gray-500">Google LLC • 5B+ Downloads • <i class="fa-solid fa-circle-check text-blue-500"></i> Verified</p>
+                </div>
+                <div class="border rounded-xl p-4 hover:bg-gray-50 cursor-pointer hook-app" onclick="checkHook('game', this)">
+                    <i class="fa-solid fa-person-running text-5xl text-yellow-500 mb-2"></i>
+                    <h3 class="font-bold">Subway Runner 3D</h3>
+                    <p class="text-xs text-gray-500">CoolGames • 1M+ Downloads</p>
+                </div>
+                <div class="border rounded-xl p-4 hover:bg-red-50 cursor-pointer hook-app" onclick="checkHook('fake', this)">
+                    <i class="fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-2"></i>
+                    <h3 class="font-bold text-red-600">VIRUS DETECTED</h3>
+                    <p class="text-xs text-red-400">Install Anti-Virus NOW! (Unknown Publisher)</p>
+                </div>
+            </div>
+            <div id="hook-feedback" class="mt-4 p-3 rounded hidden"></div>
+        </section>
+
+        <!-- SECTION 2: DO NOW -->
+        <section id="sec-vocab" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="240" onclick="activateSection('sec-vocab')">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-vocab"></div></div>
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-puzzle-piece text-pink-500 mr-2"></i>2. Do Now! Tech Vocab Match</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500">10 Marks</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 4:00</div>
+                </div>
+            </div>
+
+            <p class="mb-4">Match the correct tech vocabulary word to the real-world scenario. <span class="no-print italic text-gray-500">(Scores automatically when matched)</span></p>
+
+            <div class="space-y-3">
+                <!-- Vocab 1 -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded border border-gray-200">
+                    <span class="mb-2 sm:mb-0 w-full sm:w-2/3">1. "The buttons are too small to tap, and the colors hurt my eyes."</span>
+                    <select class="vocab-select p-2 border rounded w-full sm:w-1/3 outline-none focus:ring-2 focus:ring-pink-400" data-answer="UI" onchange="gradeVocab(this)">
+                        <option value="">Select term...</option><option value="Authentic">Authentic</option><option value="Verify">Verify</option><option value="Legitimacy">Legitimacy</option><option value="UI">UI (User Interface)</option><option value="UX">UX (User Experience)</option>
+                    </select>
+                </div>
+                <!-- Vocab 2 -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded border border-gray-200">
+                    <span class="mb-2 sm:mb-0 w-full sm:w-2/3">2. "I checked if the developer has a blue checkmark before downloading."</span>
+                    <select class="vocab-select p-2 border rounded w-full sm:w-1/3 outline-none focus:ring-2 focus:ring-pink-400" data-answer="Verify" onchange="gradeVocab(this)">
+                        <option value="">Select term...</option><option value="Authentic">Authentic</option><option value="Verify">Verify</option><option value="Legitimacy">Legitimacy</option><option value="UI">UI (User Interface)</option><option value="UX">UX (User Experience)</option>
+                    </select>
+                </div>
+                <!-- Vocab 3 -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded border border-gray-200">
+                    <span class="mb-2 sm:mb-0 w-full sm:w-2/3">3. "This banking app is real and official, not a fake scam copy."</span>
+                    <select class="vocab-select p-2 border rounded w-full sm:w-1/3 outline-none focus:ring-2 focus:ring-pink-400" data-answer="Authentic" onchange="gradeVocab(this)">
+                        <option value="">Select term...</option><option value="Authentic">Authentic</option><option value="Verify">Verify</option><option value="Legitimacy">Legitimacy</option><option value="UI">UI (User Interface)</option><option value="UX">UX (User Experience)</option>
+                    </select>
+                </div>
+                <!-- Vocab 4 -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded border border-gray-200">
+                    <span class="mb-2 sm:mb-0 w-full sm:w-2/3">4. "The app is so smooth, it takes me exactly 2 seconds to order my food."</span>
+                    <select class="vocab-select p-2 border rounded w-full sm:w-1/3 outline-none focus:ring-2 focus:ring-pink-400" data-answer="UX" onchange="gradeVocab(this)">
+                        <option value="">Select term...</option><option value="Authentic">Authentic</option><option value="Verify">Verify</option><option value="Legitimacy">Legitimacy</option><option value="UI">UI (User Interface)</option><option value="UX">UX (User Experience)</option>
+                    </select>
+                </div>
+                 <!-- Vocab 5 -->
+                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 bg-gray-50 rounded border border-gray-200">
+                    <span class="mb-2 sm:mb-0 w-full sm:w-2/3">5. "Checking reviews and publisher details confirms the app's overall credibility."</span>
+                    <select class="vocab-select p-2 border rounded w-full sm:w-1/3 outline-none focus:ring-2 focus:ring-pink-400" data-answer="Legitimacy" onchange="gradeVocab(this)">
+                        <option value="">Select term...</option><option value="Authentic">Authentic</option><option value="Verify">Verify</option><option value="Legitimacy">Legitimacy</option><option value="UI">UI (User Interface)</option><option value="UX">UX (User Experience)</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: TEACH & I DO (Visualizer) -->
+        <section id="sec-teach" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="780" onclick="activateSection('sec-teach')">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-teach"></div></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-chalkboard-user text-green-500 mr-2"></i>3. Concept Lab: The IPO Model & Trust</h2>
+                <div class="flex items-center gap-4">
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 13:00</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-blue-800 mb-2">1. Computational Problem Solving</h3>
+                    <p class="text-sm">Every app exists to solve a problem using the <strong>I-P-O model</strong>:</p>
+                    <ul class="text-sm mt-2 list-disc pl-5 space-y-1">
+                        <li><strong>Input:</strong> Data the user gives (e.g., GPS location).</li>
+                        <li><strong>Process:</strong> What the algorithm does (e.g., match driver).</li>
+                        <li><strong>Output:</strong> What the app returns (e.g., ETA on screen).</li>
+                    </ul>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h3 class="font-bold text-yellow-800 mb-2">2. UI vs. UX</h3>
+                    <p class="text-sm"><strong>UI (User Interface)</strong> is the "paint and steering wheel" (Buttons, colors, layout).</p>
+                    <p class="text-sm mt-2"><strong>UX (User Experience)</strong> is "how smooth the car drives" (Is it fast? Is it easy? Does it solve my problem?).</p>
+                </div>
+            </div>
+
+            <!-- INTERACTIVE IPO VISUALIZER -->
+            <div class="bg-gray-900 text-white p-4 rounded-xl shadow-inner no-print mb-4">
+                <h3 class="font-bold text-gray-300 mb-4 text-center"><i class="fa-solid fa-bolt text-yellow-400"></i> Interactive Sandbox: Weather App Simulator</h3>
+                
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <!-- Input Box -->
+                    <div class="bg-gray-800 p-4 rounded border border-gray-700 w-full md:w-1/3 text-center">
+                        <div class="text-xs text-gray-400 font-mono mb-2">INPUT</div>
+                        <input type="text" id="ipo-input" placeholder="e.g. Dubai" class="w-full bg-gray-700 text-white p-2 rounded text-center outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- Process Arrow -->
+                    <div class="flex-shrink-0 text-gray-500">
+                        <button id="run-algorithm-btn" onclick="runSimulation()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold transition-all pulse-glow">RUN ALGORITHM <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                    </div>
+
+                    <!-- Process Box -->
+                    <div id="ipo-process" class="bg-gray-800 p-4 rounded border border-gray-700 w-full md:w-1/3 text-center relative overflow-hidden">
+                        <div class="text-xs text-gray-400 font-mono mb-2">PROCESS</div>
+                        <div id="process-gears" class="text-2xl text-gray-600">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <!-- Overlay for scanning effect -->
+                        <div id="process-scan" class="absolute top-0 left-0 w-full h-full bg-blue-500/20 transform -translate-x-full hidden"></div>
+                    </div>
+
+                    <!-- Output Box -->
+                    <div id="ipo-output" class="bg-gray-800 p-4 rounded border border-gray-700 w-full md:w-1/3 text-center">
+                        <div class="text-xs text-gray-400 font-mono mb-2">OUTPUT</div>
+                        <div id="output-result" class="text-xl font-bold text-gray-500 font-mono">--</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="print-only hidden p-4 border rounded">
+                <em>* Interactive IPO Simulation used during class. *</em>
+            </div>
+
+            <!-- TEACHER CHECKPOINT -->
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mt-4">
+                <p class="font-bold text-red-700"><i class="fa-solid fa-hand text-red-500 mr-2"></i> Teacher Checkpoint</p>
+                <p class="text-sm text-red-600">Wait for your teacher to model how an app like Uber functions before moving on.</p>
+            </div>
+        </section>
+
+        <!-- SECTION 4: WE DO -->
+        <section id="sec-wedo" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="420" onclick="activateSection('sec-wedo')">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-wedo"></div></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-users text-teal-500 mr-2"></i>4. Guided Practice: Social Media Deconstruction</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500">10 Marks</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 7:00</div>
+                </div>
+            </div>
+
+            <p class="mb-4 text-sm">As a class, let's deconstruct <strong>Instagram</strong> or <strong>TikTok</strong>. Select the best answers based on our discussion.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold mb-1">1. Primary Problem Solved:</label>
+                    <select class="w-full p-2 border rounded bg-gray-50 focus:ring-2 outline-none wedo-select" data-points="2" onchange="gradeWeDo()">
+                        <option value="">Select...</option>
+                        <option value="wrong">Calculating complex math formulas</option>
+                        <option value="correct">Content discovery, entertainment, and social sharing</option>
+                        <option value="wrong">Ordering groceries</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-bold mb-1">2. Example of an INPUT:</label>
+                        <select class="w-full p-2 border rounded bg-gray-50 focus:ring-2 outline-none wedo-select" data-points="2" onchange="gradeWeDo()">
+                            <option value="">Select...</option>
+                            <option value="correct">User swiping up, typing a comment, uploading a video</option>
+                            <option value="wrong">Seeing a personalized feed of videos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold mb-1">3. Example of an OUTPUT:</label>
+                        <select class="w-full p-2 border rounded bg-gray-50 focus:ring-2 outline-none wedo-select" data-points="2" onchange="gradeWeDo()">
+                            <option value="">Select...</option>
+                            <option value="wrong">Tapping the 'Like' button</option>
+                            <option value="correct">The updated feed based on your interests algorithm</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">4. How to verify authenticity of a famous account:</label>
+                    <select class="w-full p-2 border rounded bg-gray-50 focus:ring-2 outline-none wedo-select" data-points="4" onchange="gradeWeDo()">
+                        <option value="">Select...</option>
+                        <option value="wrong">Check if they have a cool profile picture</option>
+                        <option value="correct">Look for the blue verified checkmark issued by the platform</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: YOU DO (Independent / Pair Matrix) -->
+        <section id="sec-youdo" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="600" onclick="activateSection('sec-youdo')">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-youdo"></div></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-code-branch text-orange-500 mr-2"></i>5. App Lab: Deconstruction Matrix</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500">15 Marks</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 10:00</div>
+                </div>
+            </div>
+
+            <p class="mb-4 text-sm"><strong>Collaboration Task:</strong> Work with your partner. Select ONE app you use daily (e.g., Spotify, Snapchat, Duolingo). Deconstruct it below.</p>
+
+            <div class="mb-4 no-print flex justify-end">
+                <button onclick="toggleHint('matrix-hint')" class="text-sm text-blue-600 underline"><i class="fa-solid fa-life-ring"></i> Need a Hint? (Sentence Starters)</button>
+            </div>
+            <div id="matrix-hint" class="hidden bg-yellow-50 border border-yellow-200 p-3 rounded text-sm mb-4">
+                <strong>Support:</strong> Use these frames to help you write:<br>
+                <em>"The problem this app solves is..."</em><br>
+                <em>"One input the user provides is [swiping, typing X, uploading Y]..."</em><br>
+                <em>"I can verify this app is safe by checking..."</em>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-bold mb-1 text-sm">App Selected:</label>
+                    <input type="text" id="youdo-app-name" class="w-full p-2 border rounded outline-none focus:ring-2 focus:ring-orange-400" placeholder="e.g., Duolingo" onchange="checkYouDoMatrix()">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border rounded p-3 bg-gray-50">
+                        <label class="block font-bold text-sm mb-2 text-blue-800">The Problem & Input</label>
+                        <textarea id="youdo-q1" class="w-full p-2 border rounded h-24 outline-none focus:ring-2" placeholder="What problem does it solve? What data do you input?" oninput="checkYouDoMatrix()"></textarea>
+                    </div>
+                    <div class="border rounded p-3 bg-gray-50">
+                        <label class="block font-bold text-sm mb-2 text-blue-800">Process & Output</label>
+                        <textarea id="youdo-q2" class="w-full p-2 border rounded h-24 outline-none focus:ring-2" placeholder="What does the algorithm do? What is the final output?" oninput="checkYouDoMatrix()"></textarea>
+                    </div>
+                    <div class="border rounded p-3 bg-gray-50">
+                        <label class="block font-bold text-sm mb-2 text-purple-800">UI / UX Evaluation</label>
+                        <textarea id="youdo-q3" class="w-full p-2 border rounded h-24 outline-none focus:ring-2" placeholder="Is the UI clean? Does it provide a good UX? Explain." oninput="checkYouDoMatrix()"></textarea>
+                    </div>
+                    <div class="border rounded p-3 bg-gray-50">
+                        <label class="block font-bold text-sm mb-2 text-red-800">Legitimacy & Data Safety</label>
+                        <textarea id="youdo-q4" class="w-full p-2 border rounded h-24 outline-none focus:ring-2" placeholder="How do you know this app is authentic and safe to use?" oninput="checkYouDoMatrix()"></textarea>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button id="btn-submit-matrix" class="bg-gray-300 text-gray-500 px-4 py-2 rounded font-bold cursor-not-allowed no-print" disabled>Complete Matrix to Score (15 pts)</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 6: PROGRESS CHECK -->
+        <section id="sec-check" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="300" onclick="activateSection('sec-check')">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-check"></div></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-list-check text-indigo-500 mr-2"></i>6. Progress Check: App Critic</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500">15 Marks</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 5:00</div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Q1 -->
+                <div>
+                    <label class="block font-bold mb-2">1. Identify the Input and Output for a Weather App. (5 pts)</label>
+                    <textarea class="w-full p-2 border rounded h-16 outline-none focus:ring-2" id="pc-q1" onchange="autoGradeText(this, 5)"></textarea>
+                </div>
+                
+                <!-- Q2 (MCQ) -->
+                <div>
+                    <label class="block font-bold mb-2">2. Which of the following is the BEST way to verify the legitimacy of a new app before downloading? (5 pts)</label>
+                    <div class="space-y-2" id="mcq-group">
+                        <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50 mcq-label">
+                            <input type="radio" name="q2" value="wrong" class="form-radio" onclick="gradeMCQ(this, 5, 'mcq-group')"> Looking at the colors of the icon.
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50 mcq-label">
+                            <input type="radio" name="q2" value="wrong" class="form-radio" onclick="gradeMCQ(this, 5, 'mcq-group')"> Downloading it to see if it works.
+                        </label>
+                        <label class="flex items-center gap-2 p-2 border rounded cursor-pointer hover:bg-gray-50 mcq-label">
+                            <input type="radio" name="q2" value="correct" class="form-radio" onclick="gradeMCQ(this, 5, 'mcq-group')"> Checking publisher details, number of downloads, and reading reviews.
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div>
+                    <label class="block font-bold mb-2">3. Give an example of a BAD UI choice that would ruin the User Experience (UX). (5 pts)</label>
+                    <textarea class="w-full p-2 border rounded h-16 outline-none focus:ring-2" id="pc-q3" onchange="autoGradeText(this, 5)"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 7: EXIT TICKET -->
+        <section id="sec-exit" class="section-card bg-white p-6 rounded-xl shadow-sm border border-gray-100 card relative overflow-hidden" data-time="120" onclick="activateSection('sec-exit')">
+             <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"><div class="h-full bg-blue-500 w-0 transition-all duration-1000" id="prog-sec-exit"></div></div>
+             <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-xl font-bold"><i class="fa-solid fa-door-open text-gray-500 mr-2"></i>7. Exit Ticket & Reflection</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-gray-500">5 Marks</span>
+                    <div class="timer text-sm font-mono font-bold bg-gray-100 px-3 py-1 rounded">⏱ 2:00</div>
+                </div>
+            </div>
+
+            <p class="text-sm mb-4">Reflect on today's lesson. Tomorrow, we step into the shoes of the developer and wireframe our own UI!</p>
+            
+            <div class="mb-4">
+                <label class="block font-bold mb-2 text-sm">"Today I learned..."</label>
+                <textarea class="w-full p-2 border rounded h-16 outline-none focus:ring-2" id="exit-reflection" onchange="autoGradeText(this, 5)"></textarea>
+            </div>
+
+            <div>
+                <label class="block font-bold mb-2 text-sm">Confidence Meter (How well do you understand the IPO model?)</label>
+                <div class="flex justify-between w-full max-w-sm">
+                    <label class="cursor-pointer text-center"><input type="radio" name="conf" value="1" class="mb-1"><br>1<br><span class="text-xs">Lost</span></label>
+                    <label class="cursor-pointer text-center"><input type="radio" name="conf" value="2" class="mb-1"><br>2</label>
+                    <label class="cursor-pointer text-center"><input type="radio" name="conf" value="3" class="mb-1"><br>3<br><span class="text-xs">Okay</span></label>
+                    <label class="cursor-pointer text-center"><input type="radio" name="conf" value="4" class="mb-1"><br>4</label>
+                    <label class="cursor-pointer text-center"><input type="radio" name="conf" value="5" class="mb-1"><br>5<br><span class="text-xs">Expert</span></label>
+                </div>
+            </div>
+        </section>
+
+        <!-- SUBMISSION DASHBOARD (Generates before print) -->
+        <section class="bg-blue-900 text-white p-6 rounded-xl shadow-lg mt-8 no-print">
+            <h2 class="text-2xl font-bold mb-2 text-center"><i class="fa-solid fa-flag-checkered text-green-400"></i> MISSION COMPLETE</h2>
+            <p class="text-center text-blue-200 mb-6 text-sm">Review your dashboard before exporting to PDF for Google Classroom submission.</p>
+            
+            <div class="flex justify-center gap-4 mb-6">
+                <button onclick="generateDashboard()" class="bg-yellow-500 hover:bg-yellow-400 text-blue-900 font-bold py-3 px-6 rounded-lg transition-colors">
+                    <i class="fa-solid fa-rotate-right"></i> Update Dashboard
+                </button>
+                <button onclick="prepareAndPrint()" class="bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    <i class="fa-solid fa-file-pdf"></i> Save & Submit to Classroom
+                </button>
+            </div>
+        </section>
+        
+        <!-- Printable Dashboard Summary (Hidden on screen, visible on print) -->
+        <div id="dashboard-print-view" class="hidden mt-8 bg-white p-6">
+            <h2 class="text-2xl font-bold border-b-2 border-black pb-2 mb-4">Official Assessment Record</h2>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div><strong>Student:</strong> <span id="print-name"></span></div>
+                <div><strong>Class:</strong> <span id="print-class"></span></div>
+                <div><strong>Date:</strong> <span id="print-date"></span></div>
+                <div><strong>Total Score:</strong> <span id="print-score"></span> / 60</div>
+            </div>
+            <h3 class="font-bold border-b border-gray-400 mb-2">Time Tracking Log</h3>
+            <ul id="print-time-log" class="text-sm list-disc pl-5"></ul>
+        </div>
+
+    </main>
+
+    <!-- Custom Notification Toast -->
+    <div id="toast">Message here</div>
+
+    <script>
+        // --- STATE VARIABLES ---
+        let totalScore = 0;
+        const MAX_SCORE = 60;
+        let activeSectionId = null;
+        let timers = {}; // Stores interval IDs
+        let sectionTimes = {}; // Stores elapsed seconds
+        let sectionTimeLimits = {}; // Stores max limits
+        
+        // --- SCORE MANAGEMENT ---
+        function addPoints(points, reason) {
+            totalScore += points;
+            if(totalScore > MAX_SCORE) totalScore = MAX_SCORE;
+            document.getElementById('global-score').innerText = totalScore;
+            showToast(`+${points} Marks: ${reason}`);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            toast.innerText = msg;
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        // --- DYNAMIC TIMERS LOGIC ---
+        function activateSection(sectionId) {
+            if (activeSectionId === sectionId) return; // Already active
+
+            // Pause previous timer visual
+            if (activeSectionId) {
+                document.getElementById(activeSectionId).classList.remove('section-active');
+            }
+
+            activeSectionId = sectionId;
+            const sectionEl = document.getElementById(sectionId);
+            sectionEl.classList.add('section-active');
+            
+            // Extract time limit if not set
+            if (!sectionTimeLimits[sectionId]) {
+                sectionTimeLimits[sectionId] = parseInt(sectionEl.getAttribute('data-time'));
+                sectionTimes[sectionId] = 0; // initialize elapsed time
+            }
+            
+            document.getElementById('active-timer-display').innerText = `Active: ${sectionEl.querySelector('h2').innerText.split('.')[1] || 'Task'}`;
+
+            // Clear all intervals to ensure only one active global tick (for performance/simplicity)
+            for (let key in timers) { clearInterval(timers[key]); }
+
+            // Start tick for this section
+            timers[sectionId] = setInterval(() => {
+                sectionTimes[sectionId]++;
+                updateTimerUI(sectionId);
+            }, 1000);
+        }
+
+        function updateTimerUI(sectionId) {
+            const limit = sectionTimeLimits[sectionId];
+            const elapsed = sectionTimes[sectionId];
+            const remaining = Math.max(0, limit - elapsed);
+            
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            const timeStr = `⏱ ${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            const sectionEl = document.getElementById(sectionId);
+            const timerBadge = sectionEl.querySelector('.timer');
+            if(timerBadge) timerBadge.innerText = timeStr;
+
+            // Visual Cue: Turn red if < 20% time left
+            if (remaining < (limit * 0.2)) {
+                timerBadge.classList.replace('bg-gray-100', 'bg-red-100');
+                timerBadge.classList.replace('text-gray-900', 'text-red-700');
+            }
+
+            // Progress bar
+            const progBar = document.getElementById('prog-' + sectionId);
+            if(progBar) {
+                const percent = Math.min(100, (elapsed / limit) * 100);
+                progBar.style.width = percent + '%';
+                if(percent > 80) progBar.classList.replace('bg-blue-500', 'bg-red-500');
+            }
+        }
+
+        // --- SPECIFIC SECTION LOGIC ---
+
+        // 1. Hook
+        let hookCompleted = false;
+        function checkHook(type, el) {
+            if(hookCompleted) return;
+            const feedback = document.getElementById('hook-feedback');
+            feedback.classList.remove('hidden');
+            
+            // reset borders
+            document.querySelectorAll('.hook-app').forEach(a => a.classList.remove('border-blue-500', 'border-4'));
+            el.classList.add('border-blue-500', 'border-4');
+
+            if (type === 'trusted') {
+                feedback.innerHTML = "<strong>Correct!</strong> Global Maps is published by a verified company, has billions of downloads, and explains why it needs location. This is <em>Authentic</em>.";
+                feedback.className = "mt-4 p-3 rounded bg-green-100 text-green-800 text-sm";
+                if(!hookCompleted) { addPoints(0, "Observation Skill"); hookCompleted = true; } // Hook is just for engagement
+            } else if (type === 'game') {
+                feedback.innerHTML = "<strong>Be careful!</strong> A game usually doesn't need your exact home location or personal email. Review the permissions first!";
+                feedback.className = "mt-4 p-3 rounded bg-yellow-100 text-yellow-800 text-sm";
+            } else {
+                feedback.innerHTML = "<strong>DANGER!</strong> Fake warnings and unknown publishers are massive red flags. This lacks <em>Legitimacy</em>.";
+                feedback.className = "mt-4 p-3 rounded bg-red-100 text-red-800 text-sm";
+            }
+        }
+
+        // 2. Do Now (Vocab)
+        let vocabScores = {0:0, 1:0, 2:0, 3:0, 4:0};
+        function gradeVocab(selectEl) {
+            const selects = document.querySelectorAll('.vocab-select');
+            const index = Array.from(selects).indexOf(selectEl);
+            const expected = selectEl.getAttribute('data-answer');
+            
+            if (selectEl.value === expected) {
+                selectEl.classList.add('bg-green-50', 'border-green-500');
+                selectEl.classList.remove('bg-red-50', 'border-red-500');
+                if(vocabScores[index] === 0) {
+                    vocabScores[index] = 2; // 2 pts each
+                    addPoints(2, "Correct Vocab Match");
+                }
+            } else if (selectEl.value !== "") {
+                selectEl.classList.add('bg-red-50', 'border-red-500');
+                selectEl.classList.remove('bg-green-50', 'border-green-500');
+                vocabScores[index] = 0; // reset
+            }
+        }
+
+        // 3. I Do: IPO Visualizer
+        function runSimulation() {
+            const inputVal = document.getElementById('ipo-input').value || "Dubai";
+            const btn = document.getElementById('run-algorithm-btn');
+            const processBox = document.getElementById('ipo-process');
+            const gears = document.getElementById('process-gears');
+            const scanner = document.getElementById('process-scan');
+            const outputText = document.getElementById('output-result');
+
+            btn.disabled = true;
+            outputText.innerText = "--";
+            outputText.classList.remove('text-green-500');
+
+            // Simulate Processing
+            gears.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-blue-500"></i>';
+            scanner.classList.remove('hidden');
+            scanner.style.transform = 'translateX(0)';
+            scanner.style.transition = 'transform 1.5s ease-in-out';
+            
+            setTimeout(() => {
+                scanner.style.transform = 'translateX(100%)';
+            }, 50);
+
+            setTimeout(() => {
+                // Done processing
+                gears.innerHTML = '<i class="fa-solid fa-server"></i>';
+                scanner.classList.add('hidden');
+                scanner.style.transform = 'translateX(-100%)';
+                
+                // Output
+                outputText.innerText = "25°C Sunny";
+                outputText.classList.add('text-green-500');
+                btn.disabled = false;
+                showToast("Algorithm executed successfully.");
+            }, 1500);
+        }
+
+        // 4. We Do Matrix
+        let wedoScored = false;
+        function gradeWeDo() {
+            if(wedoScored) return;
+            const selects = document.querySelectorAll('.wedo-select');
+            let allCorrect = true;
+            let currentTotal = 0;
+            selects.forEach(s => {
+                if(s.value !== 'correct') allCorrect = false;
+                if(s.value === 'correct') currentTotal += parseInt(s.getAttribute('data-points'));
+            });
+
+            if (allCorrect) {
+                addPoints(10, "Social Media Deconstruction");
+                wedoScored = true;
+                selects.forEach(s => { s.classList.add('bg-green-100', 'border-green-500'); s.disabled = true; });
+            }
+        }
+
+        // 5. You Do Matrix
+        let youDoScored = false;
+        function checkYouDoMatrix() {
+            if(youDoScored) return;
+            const name = document.getElementById('youdo-app-name').value.trim();
+            const q1 = document.getElementById('youdo-q1').value.trim();
+            const q2 = document.getElementById('youdo-q2').value.trim();
+            const q3 = document.getElementById('youdo-q3').value.trim();
+            const q4 = document.getElementById('youdo-q4').value.trim();
+            const btn = document.getElementById('btn-submit-matrix');
+
+            if (name.length > 2 && q1.length > 10 && q2.length > 10 && q3.length > 10 && q4.length > 10) {
+                btn.disabled = false;
+                btn.classList.replace('bg-gray-300', 'bg-orange-500');
+                btn.classList.replace('text-gray-500', 'text-white');
+                btn.classList.add('hover:bg-orange-600', 'pulse-glow');
+                btn.innerText = "Submit Matrix Analysis";
+                btn.onclick = function() {
+                    if(!youDoScored) {
+                        addPoints(15, "Matrix Completed");
+                        youDoScored = true;
+                        btn.innerText = "Matrix Saved (15/15)";
+                        btn.classList.remove('pulse-glow');
+                        btn.classList.replace('bg-orange-500', 'bg-green-500');
+                    }
+                }
+            }
+        }
+        function toggleHint(id) {
+            const el = document.getElementById(id);
+            el.classList.toggle('hidden');
+        }
+
+        // 6. Progress Check (Auto grade simple text areas on blur/change)
+        let textScores = {};
+        function autoGradeText(el, pts) {
+            if (el.value.trim().length > 15) {
+                if(!textScores[el.id]) {
+                    textScores[el.id] = pts;
+                    addPoints(pts, "Detailed response recorded");
+                    el.classList.add('border-green-400', 'bg-green-50');
+                }
+            } else {
+                 if(textScores[el.id]) {
+                     // Too short, don't remove points but warn.
+                     el.classList.remove('border-green-400', 'bg-green-50');
+                     el.classList.add('border-yellow-400');
+                 }
+            }
+        }
+
+        let mcqScored = false;
+        function gradeMCQ(radio, pts, groupClass) {
+            if(mcqScored) return;
+            // style all labels
+            const labels = document.querySelectorAll(`.${groupClass} label`);
+            labels.forEach(l => {
+                l.classList.remove('bg-green-100', 'bg-red-100', 'border-green-500', 'border-red-500');
+            });
+            
+            const parent = radio.parentElement;
+            if (radio.value === 'correct') {
+                parent.classList.add('bg-green-100', 'border-green-500');
+                addPoints(pts, "Correct MCQ");
+                mcqScored = true;
+                // disable all in group
+                document.querySelectorAll(`.${groupClass} input`).forEach(i => i.disabled = true);
+            } else {
+                parent.classList.add('bg-red-100', 'border-red-500');
+            }
+        }
+
+        // --- PDF EXPORT & DASHBOARD LOGIC ---
+        function generateDashboard() {
+            // Fill hidden print dashboard
+            document.getElementById('print-name').innerText = document.getElementById('student-name').value || "No Name Provided";
+            document.getElementById('print-class').innerText = document.getElementById('student-class').value || "N/A";
+            document.getElementById('print-date').innerText = document.getElementById('student-date').value || new Date().toLocaleDateString();
+            document.getElementById('print-score').innerText = totalScore;
+
+            // Generate time log
+            const logUl = document.getElementById('print-time-log');
+            logUl.innerHTML = "";
+            const sectionNames = {
+                'sec-hook': 'Mission Launch',
+                'sec-vocab': 'Do Now: Vocab',
+                'sec-teach': 'Concept Lab (IPO)',
+                'sec-wedo': 'Guided Practice',
+                'sec-youdo': 'App Lab (Matrix)',
+                'sec-check': 'Progress Check',
+                'sec-exit': 'Exit Ticket'
+            };
+
+            for (const [id, name] of Object.entries(sectionNames)) {
+                const secs = sectionTimes[id] || 0;
+                const mins = Math.floor(secs / 60);
+                const rSecs = secs % 60;
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${name}:</strong> ${mins}m ${rSecs}s spent`;
+                logUl.appendChild(li);
+            }
+            
+            showToast("Dashboard Updated!");
+        }
+
+        function prepareAndPrint() {
+            // Stop timers
+            for (let key in timers) { clearInterval(timers[key]); }
+            generateDashboard();
+            
+            // Small delay to ensure CSS renders, then print
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        }
+
+        // Initialization
+        document.getElementById('student-date').valueAsDate = new Date();
+    </script>
+</body>
+</html>
