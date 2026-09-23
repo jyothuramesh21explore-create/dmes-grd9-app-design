@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 11 App Design - Evaluating App Security</title>
+    <style>
+        :root {
+            --primary: #1e3a8a; /* Deep Blue */
+            --secondary: #3b82f6; /* Bright Blue */
+            --accent: #fbbf24; /* Amber/Gold */
+            --bg-color: #f3f4f6;
+            --text-main: #1f2937;
+            --text-light: #4b5563;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --white: #ffffff;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 30px 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 25px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: var(--accent);
+            color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.1em;
+            box-shadow: var(--shadow);
+        }
+
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            background: var(--white);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--text-light);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .stage-card {
+            background: var(--white);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            border-left: 6px solid var(--primary);
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .stage-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stage-title {
+            color: var(--primary);
+            font-size: 1.3em;
+            font-weight: 700;
+        }
+
+        .stage-timer {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-family: monospace;
+            cursor: pointer;
+            border: 2px solid #d1d5db;
+            transition: all 0.3s ease;
+        }
+        
+        .stage-timer:hover {
+            background-color: #e5e7eb;
+        }
+
+        .timer-warning {
+            background-color: var(--warning);
+            color: white;
+            border-color: var(--warning);
+        }
+
+        .timer-danger {
+            background-color: var(--danger);
+            color: white;
+            border-color: var(--danger);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .btn {
+            background-color: var(--secondary);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.2s;
+            margin-top: 15px;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .btn-outline:hover {
+             background-color: var(--secondary);
+             color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        textarea {
+            width: 100%;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .phishing-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .phishing-img {
+            border: 3px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #ffffff;
+            flex: 1;
+            min-width: 280px;
+            transition: all 0.2s;
+        }
+        .phishing-img:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .phishing-img.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+            transform: scale(1.02);
+        }
+        .url-bar {
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 1em;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+        }
+
+        .vocab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .odd-one-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .word-options {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .word-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px;
+            border: 2px solid #d1d5db;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .word-btn:hover {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+        .word-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .code-display {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-size: 0.95em;
+            border: 1px solid #333;
+        }
+        .keyword { color: #569cd6; font-weight: bold; }
+        .string { color: #ce9178; }
+        .function { color: #dcdcaa; }
+        .comment { color: #6a9955; font-style: italic; }
+
+        .feedback-msg {
+            margin-top: 15px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .feedback-msg.correct { background-color: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .feedback-msg.incorrect { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+
+        .hint-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 6px 6px 0;
+            display: none;
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .light-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #374151;
+            opacity: 0.6;
+            transition: all 0.2s;
+            background-color: #e5e7eb;
+        }
+        .light-btn[data-val="green"]:hover, .light-btn[data-val="green"].selected { background-color: var(--success); color: white; opacity: 1; }
+        .light-btn[data-val="yellow"]:hover, .light-btn[data-val="yellow"].selected { background-color: var(--warning); color: white; opacity: 1; }
+        .light-btn[data-val="red"]:hover, .light-btn[data-val="red"].selected { background-color: var(--danger); color: white; opacity: 1; }
+        .light-btn.selected { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-color: rgba(0,0,0,0.2);}
+
+        .dashboard {
+            background-color: #f8fafc;
+            border: 3px solid var(--primary);
+        }
+        .dash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .dash-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Custom Modal Replacement for Alert() */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        @media print {
+            body { background: white; color: black; font-size: 12pt; }
+            .container { width: 100%; max-width: none; padding: 0; }
+            .btn, .stage-timer, .score-board, .modal-overlay, #ready-print { display: none !important; }
+            .stage-card { border: 1px solid #ccc; box-shadow: none; break-inside: avoid; margin-bottom: 20px; padding: 20px;}
+            header { background: none; color: black; border: 2px solid black; box-shadow: none; padding: 15px; }
+            textarea { border: 1px solid #ccc; background: #f9f9f9; resize: none; height: auto; min-height: 40px; }
+            input[type="text"], select, input[type="date"] { border: none; border-bottom: 1px solid black; border-radius: 0; background: transparent; }
+            .hidden { display: block !important; } 
+            .hint-box { display: none !important; }
+            .code-display { border: 1px solid #000; background: #fff; color: #000; }
+            .keyword, .string, .function, .comment { color: #000 !important; font-weight: normal; } /* B&W print prep */
+        }
+    </style>
+</head>
+<body>
+
+<div id="custom-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+        <h3 style="color: var(--danger); margin-bottom: 15px; font-size: 1.5em;">⚠️ Notice</h3>
+        <p id="modal-text" style="margin-bottom: 20px; font-size: 1.1em;"></p>
+        <button class="btn" onclick="closeModal()" style="width: 100%;">Got it</button>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h1 style="font-size: 2em; margin-bottom: 10px;">Lesson 2: Evaluating App Security</h1>
+        <p style="font-size: 1.1em; opacity: 0.9;">Computer Science / ICT - Grade 11 App Design</p>
+        <div class="score-board">Score: <span id="total-score">0</span> / 45</div>
+    </header>
+
+    <div class="student-info">
+        <div class="form-group">
+            <label for="student-name">Student Name:</label>
+            <input type="text" id="student-name" placeholder="Enter full name" required>
+        </div>
+        <div class="form-group">
+            <label for="student-grade">Grade:</label>
+            <select id="student-grade">
+                <option value="" disabled selected>Select Grade</option>
+                <option value="9">Grade 9</option>
+                <option value="10">Grade 10</option>
+                <option value="11">Grade 11</option>
+                <option value="12">Grade 12</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="student-section">Section:</label>
+            <select id="student-section">
+                <option value="" disabled selected>Select Section</option>
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+                <option value="D">Section D</option>
+                <option value="F">Section F</option>
+                <option value="G">Section G</option>
+                <option value="H">Section H</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="current-date">Date:</label>
+            <input type="date" id="current-date">
+        </div>
+    </div>
+
+    <div class="stage-card" id="stage-1">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 1: ENTRY - "Phishing or Real?"</h2>
+            <div class="stage-timer" onclick="startTimer('timer-1', 2)">⏱ 2:00 (Click to Start)</div>
+        </div>
+        <p><strong>Mission:</strong> Spot the difference. Below are two identical-looking login screens. Which one is trying to steal your password? <em>Click on the untrustworthy image.</em></p>
+        
+        <div class="phishing-container">
+            <div class="phishing-img" onclick="selectPhishing(this, false)">
+                <div class="url-bar">🔒 https://www.instgram.com/login</div>
+                <h3 style="margin-bottom: 10px; color: #db2777;">Instagram</h3>
+                <input type="text" placeholder="Phone number, username, or email" disabled style="width: 90%; margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="password" placeholder="Password" disabled style="width: 90%; margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <button disabled style="margin-top: 10px; width: 90%; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 4px;">Log In</button>
+            </div>
+            <div class="phishing-img" onclick="selectPhishing(this, true)">
+                <div class="url-bar">🔒 https://www.instagram.com/login</div>
+                <h3 style="margin-bottom: 10px; color: #db2777;">Instagram</h3>
+                <input type="text" placeholder="Phone number, username, or email" disabled style="width: 90%; margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="password" placeholder="Password" disabled style="width: 90%; margin: 5px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <button disabled style="margin-top: 10px; width: 90%; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 4px;">Log In</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Why did you choose that specific login screen?</label>
+            <textarea id="entry-response" rows="2" placeholder="Type your reasoning here..."></textarea>
+        </div>
+        <button class="btn" id="btn-stage-1" onclick="checkEntry()">Submit Answer</button>
+        <div id="entry-feedback" class="feedback-msg hidden"></div>
+    </div>
+
+    <div class="stage-card" id="stage-2">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 2: LEARNING OBJECTIVE & SUCCESS CRITERIA</h2>
+            <div class="stage-timer" onclick="startTimer('timer-2', 2)">⏱ 2:00 (Click to Start)</div>
+        </div>
+        <p style="font-size: 1.1em; margin-bottom: 15px;"><strong>Learning Objective:</strong> TSW evaluate digital scenarios to determine the likelihood of security threats in app design.</p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 8px;">
+            <strong>Success Criteria (Self-Assess during the lesson):</strong><br>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 10px;">
+                <label style="cursor: pointer;"><input type="checkbox" id="sc1" style="transform: scale(1.2); margin-right: 10px;"> I can differentiate between a trustworthy and untrustworthy application.</label>
+                <label style="cursor: pointer;"><input type="checkbox" id="sc2" style="transform: scale(1.2); margin-right: 10px;"> I can code a Python conditional that filters out invalid or threatening user input.</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="stage-card" id="stage-3">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 3: DO NOW - Vocabulary Odd-One-Out</h2>
+            <div class="stage-timer" onclick="startTimer('timer-3', 4)">⏱ 4:00 (Click to Start)</div>
+        </div>
+        <p><strong>Target Vocabulary:</strong> Trustworthy, Threat, Likelihood.</p>
+        <p style="color: var(--text-light);">Identify the "Odd One Out" in each set and explain why using the target vocabulary.</p>
+
+        <div class="vocab-grid">
+            <div class="odd-one-card">
+                <h4>Set 1:</h4>
+                <div class="word-options" id="set1-options">
+                    <button class="word-btn" onclick="selectOddOne('set1', this, 'Firewall')">Firewall</button>
+                    <button class="word-btn" onclick="selectOddOne('set1', this, 'Hacker')">Hacker</button>
+                    <button class="word-btn" onclick="selectOddOne('set1', this, 'Virus')">Virus</button>
+                </div>
+                <div class="form-group">
+                    <textarea id="vocab-explain-1" rows="2" placeholder="Explain why using the word 'Trustworthy' or 'Threat'..."></textarea>
+                </div>
+            </div>
+            
+            <div class="odd-one-card">
+                <h4>Set 2:</h4>
+                <div class="word-options" id="set2-options">
+                    <button class="word-btn" onclick="selectOddOne('set2', this, '100% Guaranteed')">100% Guaranteed</button>
+                    <button class="word-btn" onclick="selectOddOne('set2', this, 'High Probability')">High Probability</button>
+                    <button class="word-btn" onclick="selectOddOne('set2', this, 'Rare Chance')">Rare Chance</button>
+                </div>
+                <div class="form-group">
+                    <textarea id="vocab-explain-2" rows="2" placeholder="Explain why using the word 'Likelihood'..."></textarea>
+                </div>
+            </div>
+        </div>
+        <button class="btn" id="btn-stage-3" onclick="checkVocab()">Submit Vocabulary</button>
+        <div id="vocab-feedback" class="feedback-msg hidden"></div>
+    </div>
+
+    <div class="stage-card" id="stage-4">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 4: EXPLICIT INSTRUCTION - Teach Time</h2>
+            <div class="stage-timer" onclick="startTimer('timer-4', 10)">⏱ 10:00 (Click to Start)</div>
+        </div>
+        <h3 style="color: var(--secondary); margin-bottom: 10px;">Threat Modeling in App Design</h3>
+        <p>What makes an app secure? As developers, we must evaluate two critical factors:</p>
+        <ul style="margin-left: 20px; margin-top: 10px; margin-bottom: 15px;">
+            <li style="margin-bottom: 5px;"><strong>The Threat:</strong> A potential negative action or event (e.g., SQL injection, weak passwords, data theft).</li>
+            <li><strong>The Likelihood:</strong> How often or how easily that threat might occur based on the app's design.</li>
+        </ul>
+        
+        <div style="background: #eff6ff; border-left: 5px solid var(--secondary); padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <strong style="color: #1d4ed8; font-size: 1.1em;">⚠️ Misconception Alert!</strong>
+            <p style="margin-top: 5px;">Many people think: <em>"If it's in the Apple App Store or Google Play, it is 100% trustworthy."</em></p>
+            <p style="margin-top: 5px;"><strong>Reality:</strong> While screened for major viruses, many apps legally track excessive data (like location and contacts). This creates a privacy <strong>threat</strong> with a high <strong>likelihood</strong> of occurring if users blindly accept all permissions.</p>
+        </div>
+        <p style="font-style: italic; color: var(--text-light);">Listen to the teacher's explanation before moving to the code model.</p>
+    </div>
+
+    <div class="stage-card" id="stage-5">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 5: TEACHER MODEL (I Do)</h2>
+        </div>
+        <p><strong>Scenario:</strong> Designing a password creation screen for a new app.</p>
+        <p><strong>Teacher Think-Aloud:</strong> "If I let a user make the password '123', the <em>likelihood</em> of a hack is high. This makes my app less <em>trustworthy</em>. Therefore, in my code, I must use a conditional check to validate the length."</p>
+        
+        <div class="code-display">
+<span class="comment"># We get the user's password input</span>
+<span class="keyword">password</span> = input(<span class="string">"Create a password: "</span>)
+
+<span class="comment"># We use 'len()' to check how many characters are in the password</span>
+<span class="keyword">if</span> <span class="function">len</span>(password) < <span class="string">8</span>:
+    <span class="function">print</span>(<span class="string">"Threat detected: Password too weak"</span>)
+<span class="keyword">else</span>:
+    <span class="function">print</span>(<span class="string">"Password accepted. Trustworthy."</span>)
+        </div>
+        
+        <div class="form-group" style="margin-top: 20px; background: #f3f4f6; padding: 15px; border-radius: 8px;">
+            <label style="color: var(--primary);">Prediction Check: What will the console output if the user enters the word <strong>"apple"</strong>?</label>
+            <input type="text" id="model-prediction" placeholder="Type the predicted output exactly...">
+            <button class="btn btn-outline" id="btn-stage-5" style="margin-top: 10px;" onclick="checkPrediction()">Check Prediction</button>
+        </div>
+        <div id="prediction-feedback" class="feedback-msg hidden"></div>
+    </div>
+
+    <div class="stage-card" id="stage-6">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 6: GUIDED PRACTICE (We Do)</h2>
+            <div class="stage-timer" onclick="startTimer('timer-6', 10)">⏱ 10:00 (Click to Start)</div>
+        </div>
+        <p><strong>Collaborative Threat Matrix & Coding</strong></p>
+        <p style="margin-bottom: 15px;">Let's evaluate a scenario together: An app claims to be a "Simple Calculator" but asks for <strong>GPS Location</strong> permissions.</p>
+        
+        <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 20px; background: #fffbeb; padding: 15px; border: 1px solid #fde68a; border-radius: 8px;">
+            <label style="font-weight: bold;">Step 1: Evaluate Likelihood of a privacy threat:</label>
+            <select id="we-do-likelihood" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="">Select...</option>
+                <option value="low">Low (Safe)</option>
+                <option value="medium">Medium (Moderate Risk)</option>
+                <option value="high">High (Severe Threat)</option>
+            </select>
+        </div>
+
+        <p><strong>Step 2: Complete the Python logic collaboratively:</strong></p>
+        <div class="code-display" style="padding: 15px;">
+<span class="keyword">permission</span> = <span class="string">"location"</span>
+<span class="keyword">app_type</span> = <span class="string">"calculator"</span>
+
+<span class="comment"># Fill in the blanks with the exact string values we are looking for</span>
+<span class="keyword">if</span> permission == <input type="text" id="we-do-code-1" style="width: 110px; font-family: monospace; background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;" placeholder='"..."'> <span class="keyword">and</span> app_type == <input type="text" id="we-do-code-2" style="width: 130px; font-family: monospace; background: #333; color: #fff; border: 1px solid #666; padding: 2px 5px;" placeholder='"..."'>:
+    <span class="function">print</span>(<span class="string">"Untrustworthy!"</span>)
+        </div>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn" id="btn-stage-6" onclick="checkWeDo()">Check Our Logic</button>
+            <button class="btn btn-outline" onclick="toggleHint('hint-1')">Need a Hint?</button>
+        </div>
+        
+        <div id="hint-1" class="hint-box">
+            <strong>Hint:</strong> Look at the variables defined at the top. We are checking if the variables match those exact string values. Don't forget to type your answer inside quotes, e.g., <code>"location"</code>.
+        </div>
+        <div id="wedo-feedback" class="feedback-msg hidden"></div>
+    </div>
+
+    <div class="stage-card" id="stage-7">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 7: INDEPENDENT APPLICATION (You Do)</h2>
+            <div class="stage-timer" onclick="startTimer('timer-7', 12)">⏱ 12:00 (Click to Start)</div>
+        </div>
+        <div style="background: #e0f2fe; border: 1px solid #bae6fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="color: #0369a1; margin-bottom: 5px;">Mission: Code a "Trust Validator"</h3>
+            <p><strong>Problem Statement:</strong> Write a Python program that asks a user for a website URL. If the URL contains "http://" instead of "https://", the program should output a warning about security threats.</p>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <strong>Differentiated Tasks:</strong>
+            <ul style="margin-left: 20px;">
+                <li><span style="color: var(--secondary); font-weight: bold;">Support:</span> Use the "Support Hint" button to see the exact syntax for checking strings using the <code>in</code> operator.</li>
+                <li><span style="color: var(--success); font-weight: bold;">Core:</span> Program correctly uses `if/else`, accepts input, and checks for "http://".</li>
+                <li><span style="color: var(--primary); font-weight: bold;">Stretch:</span> Add an <code>elif</code> statement to check if the URL contains ".gov" or ".edu" and print "High Trust".</li>
+            </ul>
+        </div>
+
+        <!-- Fake IDE Canvas -->
+        <div style="border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #2d2d2d; color: #e5e5e5; padding: 10px 15px; border-bottom: 1px solid #111;">
+                <span style="font-family: monospace; font-size: 0.9em;">main.py - Python Simulator Workspace</span>
+                <button class="btn" style="margin: 0; padding: 6px 15px; background: #10b981;" onclick="simulateRun()">▶ Run Code</button>
+            </div>
+            <textarea id="student-code" rows="12" style="width: 100%; border: none; background: #1e1e1e; color: #d4d4d4; font-family: 'Consolas', monospace; font-size: 1.1em; padding: 15px; outline: none; resize: vertical;">
+# Starter Code
+url = input("Enter a website URL: ")
+
+# Write your if/else logic below using the 'in' operator:
+
+</textarea>
+            
+            <div style="background: #000; color: #4ade80; font-family: 'Consolas', monospace; padding: 15px; min-height: 100px; border-top: 2px solid #333;" id="console-output">
+                > Console ready. Click 'Run Code' to test your logic...
+            </div>
+        </div>
+
+        <button class="btn btn-outline" style="margin-top: 15px;" onclick="toggleHint('hint-2')">Support Hint</button>
+        <div id="hint-2" class="hint-box">
+            <strong>Syntax Reminder:</strong> To check if a specific word or phrase is inside a larger string, use the <code>in</code> operator. <br><br>
+            Example Structure:<br>
+            <code>if "http://" in url:</code><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<code>print("Warning!")</code><br>
+            <code>else:</code><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<code>print("Secure connection.")</code>
+        </div>
+    </div>
+
+    <div class="stage-card" id="stage-8">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 8: HIGH-IMPACT PROGRESS CHECK</h2>
+            <div class="stage-timer" onclick="startTimer('timer-8', 5)">⏱ 5:00 (Click to Start)</div>
+        </div>
+        <p><strong>Exit Ticket Analysis</strong> - Answer the conceptual questions below based on the code you just wrote.</p>
+        
+        <div class="form-group" style="margin-top: 20px; margin-bottom: 20px;">
+            <label>1. In Python, why do we use <code>"https" in url</code> instead of <code>url == "https"</code> for this specific problem?</label>
+            <textarea id="pc-q1" rows="2" placeholder="Explain the difference between 'in' and '=='..."></textarea>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 25px;">
+            <label>2. If a user enters "HTTPS://www.bank.com" (capital letters), will the condition <code>if "https" in url:</code> find it? Why or why not?</label>
+            <textarea id="pc-q2" rows="2" placeholder="Think about how Python reads text..."></textarea>
+        </div>
+
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+            <label style="font-size: 1.1em; color: var(--primary);"><strong>Self-Assessment: How did you complete Stage 7?</strong></label>
+            <p style="font-size: 0.9em; color: var(--text-light); margin-bottom: 10px;">Be honest; this helps the teacher adjust the next lesson.</p>
+            <div class="traffic-lights">
+                <button class="light-btn" data-val="green" onclick="selectTrafficLight(this)">🟢 Independently</button>
+                <button class="light-btn" data-val="yellow" onclick="selectTrafficLight(this)">🟡 With Help (Hints/Peers)</button>
+                <button class="light-btn" data-val="red" onclick="selectTrafficLight(this)">🔴 Need Practice</button>
+            </div>
+            <input type="hidden" id="traffic-light-status" value="">
+        </div>
+    </div>
+
+    <div class="stage-card" id="stage-9">
+        <div class="stage-header">
+            <h2 class="stage-title">STAGE 9: FEEDBACK & INSTRUCTIONAL ADJUSTMENT</h2>
+        </div>
+        <p>Review the Progress Check with your teacher. Complete the reflection below to secure your learning.</p>
+        
+        <div class="form-group" style="margin-top: 15px; margin-bottom: 20px;">
+            <label>What mistake or misconception did you identify in your code or logic today? (If none, what was your biggest "aha!" moment?)</label>
+            <textarea id="ref-mistake" rows="2" placeholder="E.g., I forgot that Python is case-sensitive..."></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label>Based on your traffic-light assessment, what is your next step?</label>
+            <select id="ref-next">
+                <option value="" disabled selected>Select Next Step...</option>
+                <option value="Review string methods">Review how string matching works</option>
+                <option value="Practice if/else">Practice writing basic if/else structures</option>
+                <option value="Try the stretch goal">I'm ready to try the stretch goals (elif)</option>
+            </select>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 2px dashed #ccc; padding-top: 20px; background: #fff5f5; padding: 20px; border-radius: 8px;">
+            <label style="color: var(--danger); font-weight: bold;"><em>Teacher Only - Log Instructional Adjustment:</em></label>
+            <p style="font-size: 0.85em; margin-bottom: 10px;">Based on class data, what is the adjustment for Lesson 3?</p>
+            <select id="teacher-action" style="width: 100%; padding: 10px;">
+                <option value="None Selected">-- Select Teacher Action --</option>
+                <option value="Reteach string case sensitivity">Reteach: String case sensitivity (.lower())</option>
+                <option value="Re-model if/else structure">Re-model: Basic if/else structure</option>
+                <option value="Regroup for peer support">Regroup: Pair programming for next task</option>
+                <option value="Extend to complex conditionals">Extend: Move to 'and'/'or' complex conditionals</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="stage-card dashboard">
+        <h2 style="text-align: center; color: var(--primary); margin-bottom: 25px; font-size: 1.8em;">MISSION COMPLETE DASHBOARD</h2>
+        <div class="dash-grid">
+            <div class="dash-section">
+                <h3 style="border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 15px;">Student Data</h3>
+                <p style="margin-bottom: 8px;"><strong>Name:</strong> <span id="dash-name" style="color: var(--secondary);">---</span></p>
+                <p style="margin-bottom: 8px;"><strong>Grade/Sec:</strong> <span id="dash-grade">---</span> / <span id="dash-sec">---</span></p>
+                <p style="margin-bottom: 8px;"><strong>Date:</strong> <span id="dash-date">---</span></p>
+                <div style="margin-top: 20px; background: var(--bg-color); padding: 15px; border-radius: 8px; text-align: center;">
+                    <h3 style="color: var(--text-main); font-size: 1.2em;">Final Score</h3>
+                    <div style="font-size: 2.5em; font-weight: bold; color: var(--primary);"><span id="dash-score">0</span><span style="font-size: 0.5em; color: var(--text-light);">/45</span></div>
+                </div>
+            </div>
+            
+            <div class="dash-section">
+                <h3 style="border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 15px;">Time Tracking</h3>
+                <ul id="dash-times" style="list-style-type: none; font-family: monospace; font-size: 1.1em;">
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 1 (Entry):</span> <strong id="time-log-1">00:00</strong></li>
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 2 (Obj):</span> <strong id="time-log-2">00:00</strong></li>
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 3 (Vocab):</span> <strong id="time-log-3">00:00</strong></li>
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 4 (Teach):</span> <strong id="time-log-4">00:00</strong></li>
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 6 (We Do):</span> <strong id="time-log-6">00:00</strong></li>
+                    <li style="margin-bottom: 5px; display: flex; justify-content: space-between;"><span>Stage 7 (You Do):</span> <strong id="time-log-7">00:00</strong></li>
+                    <li style="display: flex; justify-content: space-between;"><span>Stage 8 (Check):</span> <strong id="time-log-8">00:00</strong></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="dash-section" style="margin-top: 25px;">
+            <h3 style="border-bottom: 2px solid var(--bg-color); padding-bottom: 10px; margin-bottom: 15px;">Completion Status</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <p><strong>Self-Assessment:</strong><br> <span id="dash-traffic" style="display: inline-block; margin-top: 5px; font-weight: bold;">---</span></p>
+                </div>
+                <div>
+                    <p><strong>Teacher Action:</strong><br> <span id="dash-action" style="display: inline-block; margin-top: 5px; font-style: italic;">---</span></p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center; background: #e0f2fe; padding: 20px; border-radius: 8px;">
+                <label style="font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <input type="checkbox" id="ready-print" style="transform: scale(1.5);"> I have reviewed all my answers and am ready to submit.
+                </label>
+                <br>
+                <button class="btn" style="background-color: var(--primary); font-size: 1.2em; padding: 15px 30px; margin-top: 10px; width: 100%; max-width: 400px;" onclick="prepareAndPrint()">🖨️ Export / Print as PDF</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Global State Variables
+    let score = 0;
+    const MAX_SCORE = 45; // 10 (S1) + 10 (S3) + 5 (S5) + 10 (S6) + 10 (S7)
+    let timeSpent = {1:0, 2:0, 3:0, 4:0, 6:0, 7:0, 8:0};
+    let activeIntervals = {};
+
+    // Helper: Custom Modal Alert replacement
+    function showModal(message) {
+        const modal = document.getElementById('custom-modal');
+        document.getElementById('modal-text').innerText = message;
+        modal.classList.remove('hidden');
+    }
+    function closeModal() {
+        document.getElementById('custom-modal').classList.add('hidden');
+    }
+    
+    // Helper: Toggle Hints
+    function toggleHint(hintId) {
+        const hint = document.getElementById(hintId);
+        hint.style.display = (hint.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Update Score UI globally
+    function updateScore(points) {
+        score += points;
+        document.getElementById('total-score').innerText = score;
+        document.getElementById('dash-score').innerText = score;
+    }
+
+    const inputs = ['student-name', 'student-grade', 'student-section', 'current-date', 'teacher-action'];
+    const dashTargets = ['dash-name', 'dash-grade', 'dash-sec', 'dash-date', 'dash-action'];
+    
+    inputs.forEach((id, index) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+            let val = e.target.value;
+            // Handle select specifically to get text
+            if(e.target.tagName === 'SELECT' && e.target.selectedIndex > 0) {
+                 val = e.target.options[e.target.selectedIndex].text;
+            }
+            document.getElementById(dashTargets[index]).innerText = val || '---';
+        });
+    });
+
+    function startTimer(timerId, minutes) {
+        if(activeIntervals[timerId]) return; // Prevent double starting
+
+        const display = document.querySelector(`.stage-timer[onclick*="${timerId}"]`);
+        let time = minutes * 60;
+        const stageNum = timerId.split('-')[1];
+
+        // Ensure timer visually switches to active state immediately
+        display.style.border = "2px solid #3b82f6";
+        display.style.color = "#1e3a8a";
+
+        activeIntervals[timerId] = setInterval(() => {
+            time--;
+            timeSpent[stageNum]++;
+            
+            // Sync formatting to Dashboard
+            const spentMin = Math.floor(timeSpent[stageNum] / 60);
+            const spentSec = timeSpent[stageNum] % 60;
+            document.getElementById(`time-log-${stageNum}`).innerText = 
+                `${spentMin.toString().padStart(2,'0')}:${spentSec.toString().padStart(2,'0')}`;
+
+            // Time Up State
+            if(time <= 0) {
+                clearInterval(activeIntervals[timerId]);
+                display.innerText = "⏱ Time Up";
+                display.classList.remove('timer-warning');
+                display.classList.add('timer-danger');
+                return;
+            }
+
+            // Normal Tick State
+            const min = Math.floor(time / 60);
+            const sec = time % 60;
+            display.innerText = `⏱ ${min}:${sec.toString().padStart(2, '0')}`;
+
+            // Warning State (Last 60 seconds)
+            if(time <= 60 && time > 0) {
+                display.classList.add('timer-warning');
+            }
+        }, 1000);
+        
+        display.onclick = null; // Disable click after start
+    }
+
+    let selectedPhish = null;
+    function selectPhishing(element, isReal) {
+        document.querySelectorAll('.phishing-img').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedPhish = isReal;
+    }
+
+    function checkEntry() {
+        if(selectedPhish === null) return showModal("Please click on one of the images to select it first!");
+        const reason = document.getElementById('entry-response').value.trim();
+        if(reason.length < 5) return showModal("Please type a reason explaining why you chose that image.");
+
+        const fb = document.getElementById('entry-feedback');
+        fb.classList.remove('hidden', 'correct', 'incorrect');
+        
+        if(selectedPhish === false) { 
+            fb.innerHTML = "✅ <strong>Correct!</strong> Look at the URL on the left: it's missing an 'a' (instgram). This is a phishing threat attempting to steal credentials. <strong>(+10 pts)</strong>";
+            fb.classList.add('correct');
+            updateScore(10);
+        } else {
+            fb.innerHTML = "❌ <strong>Incorrect.</strong> Look very closely at the URL on the left image compared to the right. Scammers often use slight misspellings!";
+            fb.classList.add('incorrect');
+        }
+        document.getElementById('btn-stage-1').disabled = true;
+    }
+
+    let s1Word = null, s2Word = null;
+    function selectOddOne(set, element, word) {
+        document.querySelectorAll(`#${set}-options .word-btn`).forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        if(set === 'set1') s1Word = word;
+        if(set === 'set2') s2Word = word;
+    }
+
+    function checkVocab() {
+        if(!s1Word || !s2Word) return showModal("Make sure you select the odd word out for both sets.");
+        const ex1 = document.getElementById('vocab-explain-1').value.trim();
+        const ex2 = document.getElementById('vocab-explain-2').value.trim();
+        if(ex1.length < 10 || ex2.length < 10) return showModal("Please write a full sentence explanation for both sets.");
+
+        const fb = document.getElementById('vocab-feedback');
+        fb.classList.remove('hidden', 'correct', 'incorrect');
+        
+        let pts = 0;
+        let msg = "";
+        
+        if(s1Word === 'Firewall') { pts+=5; msg += "✅ <strong>Set 1:</strong> Correct. A firewall is 'Trustworthy', while Hackers/Viruses are 'Threats'.<br>"; }
+        else { msg += "❌ <strong>Set 1:</strong> Incorrect. Think about which item protects you vs which items harm you.<br>"; }
+        
+        if(s2Word === '100% Guaranteed') { pts+=5; msg += "✅ <strong>Set 2:</strong> Correct. 'Likelihood' deals with probability (chance), nothing in security is 100% guaranteed.<br>"; }
+        else { msg += "❌ <strong>Set 2:</strong> Incorrect. Likelihood is about probability and chance."; }
+
+        if(pts > 0) {
+            msg += `<br><strong>(+${pts} pts)</strong>`;
+            updateScore(pts);
+        }
+        
+        fb.innerHTML = msg;
+        fb.classList.add(pts === 10 ? 'correct' : 'incorrect');
+        document.getElementById('btn-stage-3').disabled = true;
+    }
+
+    function checkPrediction() {
+        const pred = document.getElementById('model-prediction').value.trim().toLowerCase();
+        if(!pred) return showModal("Please type a prediction first.");
+        
+        const fb = document.getElementById('prediction-feedback');
+        fb.classList.remove('hidden', 'correct', 'incorrect');
+        
+        if(pred.includes("threat detected") || pred.includes("weak")) {
+            fb.innerHTML = "✅ <strong>Great Prediction!</strong> 'apple' is only 5 characters long. Since 5 < 8 is True, the IF block runs. <strong>(+5 pts)</strong>";
+            fb.classList.add('correct');
+            updateScore(5);
+            document.getElementById('btn-stage-5').disabled = true;
+        } else {
+            fb.innerHTML = "❌ <strong>Incorrect.</strong> Look at the IF statement: <code>len(\"apple\")</code> is 5. Is 5 less than 8? What should print?";
+            fb.classList.add('incorrect');
+        }
+    }
+
+    function checkWeDo() {
+        const like = document.getElementById('we-do-likelihood').value;
+        const c1 = document.getElementById('we-do-code-1').value.replace(/['"]/g, '').trim().toLowerCase();
+        const c2 = document.getElementById('we-do-code-2').value.replace(/['"]/g, '').trim().toLowerCase();
+        
+        if(like === "") return showModal("Please select a Likelihood level from the dropdown.");
+        if(c1 === "" || c2 === "") return showModal("Please fill in both blanks in the code snippet.");
+
+        const fb = document.getElementById('wedo-feedback');
+        fb.classList.remove('hidden', 'correct', 'incorrect');
+
+        if(like === 'high' && c1 === 'location' && c2 === 'calculator') {
+            fb.innerHTML = "✅ <strong>Excellent logic!</strong> A calculator needing GPS is a HIGH likelihood threat, and the exact string matches are syntactically correct. <strong>(+10 pts)</strong>";
+            fb.classList.add('correct');
+            updateScore(10);
+            document.getElementById('btn-stage-6').disabled = true;
+        } else {
+            fb.innerHTML = "❌ <strong>Not quite.</strong> Think about why a calculator needs GPS (High Threat). Also, ensure you typed exactly 'location' and 'calculator' inside the code boxes.";
+            fb.classList.add('incorrect');
+        }
+    }
+
+    function simulateRun() {
+        const code = document.getElementById('student-code').value;
+        const consoleOut = document.getElementById('console-output');
+        
+        // Simulating the user input environment conceptually
+        let output = "> Terminal Started...\n> Simulating URL Input: 'http://www.insecurebank.com'\n";
+        
+        let hasIf = code.includes('if');
+        let hasIn = code.includes('in url') || code.includes('in');
+        let hasHttp = code.includes('http://') || code.includes("'http://'") || code.includes('"http://"');
+        
+        // Very basic AST-like checks based on string parsing for the assignment requirements
+        if (code.trim() === "") {
+             output += "\n> Error: Workspace is empty. Write your logic first.";
+        } else if(hasIf && hasIn && hasHttp) {
+            output += "> Code Analysis: Core syntax found (if, in, http://).\n";
+            output += "> Result: Output successfully generated based on condition!\n\n> SCORE: +10 Points!";
+            
+            // Only award points once
+            if(!consoleOut.innerText.includes("SCORE")) {
+                updateScore(10);
+            }
+        } else {
+            output += "\n> Code Analysis Failed.\n> Missing requirements: Did you use 'if', the 'in' operator, and check for the string 'http://'?";
+        }
+        
+        consoleOut.innerText = output;
+    }
+
+    function selectTrafficLight(element) {
+        document.querySelectorAll('.light-btn').forEach(el => el.classList.remove('selected'));
+        element.classList.add('selected');
+        const val = element.getAttribute('data-val');
+        document.getElementById('traffic-light-status').value = val;
+        
+        let statusText = "🟢 Independently";
+        if(val === 'yellow') statusText = "🟡 With Help";
+        if(val === 'red') statusText = "🔴 Need Practice";
+        document.getElementById('dash-traffic').innerText = statusText;
+    }
+
+    function prepareAndPrint() {
+        // Validation Checks
+        if(!document.getElementById('student-name').value) return showModal("Please enter your name at the top of the page before printing.");
+        if(!document.getElementById('student-grade').value) return showModal("Please select your grade.");
+        if(!document.getElementById('ready-print').checked) return showModal("Please check the confirmation box in the dashboard before printing.");
+        
+        // Freeze all timers for print
+        for(let id in activeIntervals) { clearInterval(activeIntervals[id]); }
+        
+        // Trigger browser print dialog (Styled by @media print)
+        window.print();
+    }
+</script>
+</body>
+</html>
