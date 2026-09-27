@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing - Grade 9 App Design</title>
+    <style>
+        :root {
+            --primary: #059669;
+            --primary-hover: #047857;
+            --secondary: #f3f4f6;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body { font-family: var(--font-main); background: var(--secondary); margin: 0; padding: 20px; color: var(--text); }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card { background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); }
+        h1, h2 { color: var(--primary); margin-top: 0; }
+        .header-info { display: flex; gap: 10px; margin-top: 15px; }
+        .header-info input, .header-info select { padding: 8px; border: 1px solid var(--border); border-radius: 4px; flex: 1;}
+        .timer { float: right; background: #e5e7eb; padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; cursor: pointer; }
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn:hover { background: var(--primary-hover); }
+        .interactive-box { background: #f8fafc; border: 1px solid var(--border); padding: 15px; border-radius: 4px; margin-top: 15px; }
+        
+        /* Algorithm Visualizer Styles */
+        .algo-box { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0; background: #1e293b; padding: 20px; border-radius: 8px; color: white;}
+        .data-node { background: #3b82f6; padding: 10px 20px; border-radius: 4px; font-weight: bold; }
+        .process-node { background: #f59e0b; padding: 15px; border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-weight: bold; text-align: center; font-size: 0.8em; }
+        
+        textarea { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 10px; min-height: 80px; border: 1px solid var(--border); border-radius: 4px;}
+        select { padding: 8px; border-radius: 4px; }
+        
+        @media print { body{background:white;} .card{border:1px solid #ccc; box-shadow:none; page-break-inside:avoid;} .btn, .timer{display:none;} }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" style="text-align: center; border-left: none; border-top: 5px solid var(--primary);">
+            <h1>App Design: Processing</h1>
+            <p>Grade 9 | Ms. Jyothu Ramesh | Lesson 3</p>
+            <div class="header-info">
+                <input type="text" placeholder="Name">
+                <select><option>Grade 9</option></select>
+                <select><option>Sec A</option><option>Sec B</option></select>
+                <input type="date">
+            </div>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 1: ENTRY - App Prediction <span class="timer">⏱ 2:00</span></h2>
+            <div class="interactive-box">
+                <p><strong>App: "Is It Your Birthday?"</strong></p>
+                <p>If your input is today's date, how does the app decide what output to give you?</p>
+                <textarea placeholder="I think the app decides by..."></textarea>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>STAGE 2: OBJECTIVES & CRITERIA</h2>
+            <p><strong>Objective:</strong> Evaluate apps to determine specific processing types used to convert inputs into outputs.</p>
+            <label><input type="checkbox"> I can define processing as the thinking work computers do.</label><br>
+            <label><input type="checkbox"> I can identify if/then, comparing, finding a match, and counting.</label>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 3: DO NOW! - Visual Association <span class="timer">⏱ 4:00</span></h2>
+            <p>Match the word to the icon context for app design:</p>
+            <div class="interactive-box" style="display:flex; justify-content: space-around;">
+                <div>🔍 <select><option></option><option>evaluate</option><option>criteria</option><option>sustainable</option></select></div>
+                <div>☑️ <select><option></option><option>evaluate</option><option>criteria</option><option>sustainable</option></select></div>
+                <div>♻️ <select><option></option><option>evaluate</option><option>criteria</option><option>sustainable</option></select></div>
+            </div>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 4 & 5: EXPLICIT INSTRUCTION & I DO <span class="timer">⏱ 10:00</span></h2>
+            <p><strong>Processing:</strong> The thinking work computers do to turn input into output.</p>
+            <div class="algo-box">
+                <div class="data-node">Input: Birthdate<br>(e.g. Oct 5)</div>
+                <div>➡️</div>
+                <div class="process-node">Compare<br>==</div>
+                <div>➡️</div>
+                <div class="data-node">Today's Date<br>(e.g. Oct 5)</div>
+            </div>
+            <div class="algo-box" style="margin-top: -10px; background: #334155;">
+                <div class="process-node" style="background:#10b981; border-radius:4px; width:auto;">IF Match == True THEN Output "Happy Birthday!"</div>
+            </div>
+            <p><em>Notice how it layers <strong>Comparing</strong> inside an <strong>If/Then</strong> statement!</em></p>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 6: GUIDED PRACTICE - We Do <span class="timer">⏱ 5:00</span></h2>
+            <div class="interactive-box">
+                <p>App: "How Many Countries..." - Every time you click a correct country on the map, your score goes up.</p>
+                <label>1. What kind of processing is making the score go up?</label>
+                <select><option></option><option>Counting</option><option>Finding a Match</option></select>
+                <br><br>
+                <label>2. How does the app know if you clicked the right location in the first place?</label>
+                <select><option></option><option>Counting</option><option>Finding a Match</option></select>
+            </div>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 7: INDEPENDENT APPLICATION <span class="timer">⏱ 10:00</span></h2>
+            <p>Analyze these apps and identify the PRIMARY type of processing used (If/then, Comparing, Finding a match, Counting).</p>
+            <div class="interactive-box">
+                <strong>1. National Park Quiz</strong> (Checks if typed answer equals stored answer)
+                <select style="display:block; margin: 5px 0 15px;"><option></option><option>If/then</option><option>Comparing</option><option>Finding a match</option><option>Counting</option></select>
+                
+                <strong>2. Stamp Notebook</strong> (Searches a database for a specific stamp ID)
+                <select style="display:block; margin: 5px 0 15px;"><option></option><option>If/then</option><option>Comparing</option><option>Finding a match</option><option>Counting</option></select>
+            </div>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 8: PROGRESS CHECK - Code Tracing <span class="timer">⏱ 5:00</span></h2>
+            <div class="interactive-box" style="background:#1e1e1e; color:#d4d4d4; font-family:monospace;">
+                <span style="color:#569cd6;">If</span> score &gt; 10 <span style="color:#569cd6;">then</span><br>
+                &nbsp;&nbsp;&nbsp;&nbsp;print(<span style="color:#ce9178;">"You Win!"</span>)
+            </div>
+            <div class="interactive-box">
+                <label>Which TWO types of processing are occurring in the code snippet above?</label>
+                <div style="margin-top:10px;">
+                    <label><input type="checkbox" id="chk-comp"> Comparing (>)</label><br>
+                    <label><input type="checkbox"> Finding a match</label><br>
+                    <label><input type="checkbox" id="chk-if"> If/Then</label><br>
+                    <label><input type="checkbox"> Counting</label>
+                </div>
+                <button class="btn" style="margin-top:10px;" onclick="alert('Checking logic: Are you evaluating a condition (>) and making a decision (if)?')">Check Answer</button>
+            </div>
+        </div>
+
+        <div class="card" onclick="startT(this)">
+            <h2>STAGE 9: FEEDBACK & ADJUSTMENT <span class="timer">⏱ 3:00</span></h2>
+            <p>If you struggled to find two types in Stage 8, remember that <em>Comparing</em> usually happens INSIDE an <em>If/Then</em>.</p>
+            <label><strong>Reflection:</strong> Write pseudocode for a "Guess the Number" app that uses Comparing and Output.</label>
+            <textarea placeholder="If guess is..."></textarea>
+            <button class="btn" style="margin-top:15px; width:100%;" onclick="window.print()">PRINT WORKSHEET</button>
+        </div>
+    </div>
+
+    <script>
+        function startT(card) {
+            let timerEl = card.querySelector('.timer');
+            if(timerEl.innerText.includes('Started')) return;
+            timerEl.innerText = "Started (Tracking internally)";
+            timerEl.style.background = "#d1fae5";
+            timerEl.style.color = "#065f46";
+        }
+    </script>
+</body>
+</html>

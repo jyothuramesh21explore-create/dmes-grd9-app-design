@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage and IOSP - Grade 9 App Design</title>
+    <style>
+        :root {
+            --primary: #c026d3; /* Fuchsia */
+            --primary-hover: #a21caf;
+            --secondary: #fdf4ff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body { font-family: var(--font-main); background: #f3f4f6; margin: 0; padding: 20px; color: var(--text); }
+        .container { max-width: 900px; margin: 0 auto; }
+        .card { background: white; border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid var(--primary); }
+        h1, h2 { color: var(--primary); margin-top: 0; }
+        .header-info { display: flex; gap: 10px; margin-top: 15px; }
+        .header-info input, .header-info select { padding: 8px; border: 1px solid var(--border); border-radius: 4px; flex: 1;}
+        .timer { float: right; background: var(--secondary); padding: 5px 10px; border-radius: 4px; font-family: monospace; font-weight: bold; cursor: pointer; color: var(--primary);}
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        
+        /* IOSP Model Diagram Styles */
+        .iosp-container { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 15px; background: #1e293b; padding: 20px; border-radius: 8px; margin: 20px 0;}
+        .iosp-box { background: white; padding: 15px; border-radius: 6px; text-align: center; font-weight: bold; border: 2px solid #cbd5e1;}
+        .box-in { grid-column: 1; grid-row: 1; border-color: #3b82f6;}
+        .box-proc { grid-column: 2; grid-row: 1; border-color: #f59e0b;}
+        .box-out { grid-column: 3; grid-row: 1; border-color: #10b981;}
+        .box-store { grid-column: 2; grid-row: 2; border-color: var(--primary);}
+        .arrow { color: white; font-size: 24px; display: flex; align-items: center; justify-content: center; }
+        
+        textarea, input[type="text"] { width: 100%; box-sizing: border-box; padding: 10px; margin-top: 5px; border: 1px solid var(--border); border-radius: 4px;}
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        th { background: var(--secondary); }
+
+        @media print { body{background:white;} .card{border:1px solid #ccc; box-shadow:none;} .btn, .timer{display:none;} .iosp-container{background:#f1f5f9; -webkit-print-color-adjust: exact;} .arrow{color:black;} }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card" style="text-align: center; border-left: none; border-top: 5px solid var(--primary);">
+            <h1>App Design: Storage & IOSP</h1>
+            <p>Grade 9 | Ms. Jyothu Ramesh | Lesson 4</p>
+            <div class="header-info">
+                <input type="text" placeholder="Name">
+                <select><option>Grade 9</option></select>
+                <select><option>Sec A</option><option>Sec B</option></select>
+                <input type="date">
+            </div>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 1: ENTRY <span class="timer">⏱ 2:00</span></h2>
+            <p>Think of an app you use every day. What is ONE piece of information that the app remembers about you so you don't have to type it in every time?</p>
+            <input type="text" placeholder="E.g., My username, my favorite... ">
+        </div>
+
+        <div class="card">
+            <h2>STAGE 2: OBJECTIVES & CRITERIA</h2>
+            <p><strong>Objective:</strong> Synthesize the Input-Output-Storage-Processing (IOSP) model to formulate guidelines regarding what data an app should store.</p>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 3: DO NOW! - Vocabulary <span class="timer">⏱ 4:00</span></h2>
+            <p>Match: <em>resource, consumption, conserve</em></p>
+            <div style="background:#f8fafc; padding:15px; border-radius:4px; line-height:2;">
+                "The screen is a major drain on our power <select><option></option><option>resource</option></select>. Lowering brightness reduces <select><option></option><option>consumption</option></select> in order to <select><option></option><option>conserve</option></select> energy."
+            </div>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 4 & 5: TEACH TIME & I DO <span class="timer">⏱ 10:00</span></h2>
+            <p><strong>Storage:</strong> Saving information to use in the future. Inputs are happening <em>now</em>; Storage happened in the <em>past</em>.</p>
+            
+            <div class="iosp-container">
+                <div class="iosp-box box-in">INPUT<br><span style="font-size:0.7em; font-weight:normal;">Current Weather</span></div>
+                <div class="iosp-box box-proc">PROCESSING<br><span style="font-size:0.7em; font-weight:normal;">Compare weather & color to clothing DB</span></div>
+                <div class="iosp-box box-out">OUTPUT<br><span style="font-size:0.7em; font-weight:normal;">Show Outfit</span></div>
+                <div class="iosp-box box-store">STORAGE<br><span style="font-size:0.7em; font-weight:normal;">Saved Favorite Color</span></div>
+            </div>
+            <p><em>Think-aloud: Should the app store weather? No, it changes. Should it store favorite color? Yes, it rarely changes.</em></p>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 6: GUIDED PRACTICE <span class="timer">⏱ 5:00</span></h2>
+            <p>App: "Friend Finder"</p>
+            <table>
+                <tr><th>Information</th><th>Should it be stored?</th><th>Why?</th></tr>
+                <tr><td>List of friends</td><td><select><option>Yes</option><option>No</option></select></td><td><input type="text" placeholder="Reason..."></td></tr>
+                <tr><td>Friend's exact GPS location</td><td><select><option>No</option><option>Yes</option></select></td><td><input type="text" placeholder="Reason..."></td></tr>
+            </table>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 7: INDEPENDENT APPLICATION <span class="timer">⏱ 10:00</span></h2>
+            <p>Based on what we've learned, write 2 overarching "Guidelines" for app developers on how to decide what information an app should store.</p>
+            <textarea placeholder="Guideline 1: Store information that...&#10;Guideline 2: Do not store information if..."></textarea>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 8: PROGRESS CHECK - The IOSP Flowchart <span class="timer">⏱ 5:00</span></h2>
+            <p>Scenario: A smartwatch tracking your daily steps.</p>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>INPUT (What enters now?)</label><input type="text"></div>
+                <div><label>PROCESSING (What thinking happens?)</label><input type="text"></div>
+                <div><label>STORAGE (What is saved for later?)</label><input type="text"></div>
+                <div><label>OUTPUT (What is shown?)</label><input type="text"></div>
+            </div>
+        </div>
+
+        <div class="card" onclick="startTimer(this)">
+            <h2>STAGE 9: FEEDBACK & ADJUSTMENT <span class="timer">⏱ 3:00</span></h2>
+            <p>Reflect on the app idea you brainstormed in Lesson 2. What specific data will your app need to store in its database to function properly?</p>
+            <textarea placeholder="My app will need to store..."></textarea>
+            <button class="btn" style="margin-top:20px; width:100%;" onclick="window.print()">PRINT FINAL WORKSHEET</button>
+        </div>
+    </div>
+    <script>
+        function startTimer(el) {
+            let t = el.querySelector('.timer');
+            if(t) { t.style.background = '#fdf4ff'; t.innerText = 'Active'; }
+        }
+    </script>
+</body>
+</html>

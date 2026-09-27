@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input and Output - Grade 9 App Design</title>
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --secondary: #f3f4f6;
+            --text: #1f2937;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #e5e7eb;
+            --stage-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--secondary);
+            color: var(--text);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        .header {
+            text-align: center; margin-bottom: 30px; padding: 20px;
+            background: white; border-radius: 8px; box-shadow: var(--shadow);
+        }
+        .header h1 { color: var(--primary); margin: 0 0 10px 0; }
+
+        .student-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; text-align: left; }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }
+        .input-group input, .input-group select { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-main); }
+
+        .stage-card {
+            background: var(--stage-bg); border-radius: 8px; padding: 25px; margin-bottom: 20px;
+            box-shadow: var(--shadow); border-left: 5px solid var(--primary);
+        }
+        .stage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid var(--secondary); padding-bottom: 10px; }
+        .stage-title { font-size: 1.2em; font-weight: bold; color: var(--primary); margin: 0; }
+
+        .timer { font-family: var(--font-mono); font-size: 1.1em; font-weight: bold; padding: 5px 10px; border-radius: 4px; background: var(--secondary); cursor: pointer; }
+        .timer.active { background: #ede9fe; color: var(--primary); }
+        .timer.danger { background: #fee2e2; color: var(--danger); }
+
+        .interactive-area { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 20px; margin-top: 15px; }
+        
+        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 1em; font-weight: bold; transition: background 0.3s; }
+        .btn:hover { background: var(--primary-hover); }
+
+        textarea, input[type="text"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-main); box-sizing: border-box; }
+        
+        .app-mockup {
+            border: 8px solid #333;
+            border-radius: 20px;
+            width: 300px;
+            height: 500px;
+            margin: 0 auto;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .app-header { background: #4f46e5; color: white; padding: 15px; text-align: center; font-weight: bold; }
+        .app-body { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; gap: 10px; justify-content: center; align-items: center;}
+        
+        .io-tag { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; margin-left: 5px; }
+        .tag-in { background: #dbeafe; color: #1e3a8a; border: 1px solid #bfdbfe; }
+        .tag-out { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+
+        .dashboard { background: #1e293b; color: white; padding: 25px; border-radius: 8px; margin-top: 40px; }
+        .floating-score { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 15px 25px; border-radius: 30px; font-weight: bold; font-size: 1.2em; z-index: 1000; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .traffic-light { display: flex; gap: 10px; margin-top: 10px; }
+        .light { padding: 8px 15px; border-radius: 20px; cursor: pointer; border: 2px solid transparent; font-weight: bold; opacity: 0.5; }
+        .light.green { background: #d1fae5; color: #065f46; border-color: #10b981; }
+        .light.yellow { background: #fef3c7; color: #92400e; border-color: #f59e0b; }
+        .light.red { background: #fee2e2; color: #991b1b; border-color: #ef4444; }
+        .light.selected { opacity: 1; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; }
+            .floating-score { display: none; }
+            .stage-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="floating-score">Total Marks: <span id="total-score">0</span> / 15</div>
+
+    <div class="container">
+        <div class="header">
+            <h1>App Design: Input and Output</h1>
+            <p><strong>Grade 9 | Ms. Jyothu Ramesh | 21-25 Sep</strong></p>
+            
+            <div class="student-info">
+                <div class="input-group">
+                    <label>Student Name</label>
+                    <input type="text" id="student-name">
+                </div>
+                <div class="input-group">
+                    <label>Grade</label>
+                    <select id="student-grade">
+                        <option value="">Select...</option>
+                        <option value="9">Grade 9</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Section</label>
+                    <select id="student-section">
+                        <option value="">Select...</option>
+                        <option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="F">F</option><option value="G">G</option><option value="H">H</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Date</label>
+                    <input type="date" id="student-date">
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 1: ENTRY -->
+        <div class="stage-card" id="stage1" onclick="startTimer('timer1', 120)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 1: ENTRY - Real-world Scenario</h2>
+                <div class="timer" id="timer1">⏱ 2:00</div>
+            </div>
+            <div class="interactive-area">
+                <p><strong>Scenario:</strong> Imagine that you are going to recommend a pet to someone.</p>
+                <label>What are three questions you would ask them to get the information needed to make a good recommendation?</label>
+                <textarea id="entry-q" style="min-height: 80px; margin-top: 10px;" placeholder="1. Do you have a yard?&#10;2.&#10;3."></textarea>
+            </div>
+        </div>
+
+        <!-- STAGE 2: L.O. & S.C. -->
+        <div class="stage-card">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 2: LEARNING OBJECTIVES & SUCCESS CRITERIA</h2>
+            </div>
+            <div style="background: #e0e7ff; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                <strong>Learning Objective:</strong> We will distinguish between inputs and outputs in mobile applications.
+            </div>
+            <ul style="list-style: none; padding: 0;">
+                <li><input type="checkbox"> I can identify the information a computer gets from users (input).</li>
+                <li><input type="checkbox"> I can identify the information a computer gives back (output).</li>
+            </ul>
+        </div>
+
+        <!-- STAGE 3: DO NOW -->
+        <div class="stage-card" id="stage3" onclick="startTimer('timer3', 240)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 3: DO NOW! - Odd-One-Out</h2>
+                <div class="timer" id="timer3">⏱ 4:00</div>
+            </div>
+            <p>Look at these three vocabulary words: <strong>perseverance</strong>, <strong>improve</strong>, <strong>refine</strong>.</p>
+            <div class="interactive-area">
+                <label>Which word represents the <em>attitude</em> needed during app design, rather than an <em>action</em> taken after getting feedback?</label>
+                <select id="vocab-select" style="margin-top: 10px; width: 50%;">
+                    <option value="">Select word...</option>
+                    <option value="improve">Improve</option>
+                    <option value="perseverance">Perseverance</option>
+                    <option value="refine">Refine</option>
+                </select>
+                <button class="btn" style="margin-left: 10px;" onclick="checkVocab2()">Submit</button>
+                <span id="vocab-fb" style="margin-left: 10px;"></span>
+            </div>
+        </div>
+
+        <!-- STAGE 4: EXPLICIT INSTRUCTION -->
+        <div class="stage-card" id="stage4" onclick="startTimer('timer4', 600)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 4: EXPLICIT INSTRUCTION - Data Flow</h2>
+                <div class="timer" id="timer4">⏱ 10:00 (Includes I Do)</div>
+            </div>
+            <div style="display: flex; justify-content: space-around; text-align: center; margin: 20px 0;">
+                <div style="background: #eff6ff; padding: 20px; border-radius: 8px; width: 40%; border: 2px solid #93c5fd;">
+                    <h3 style="color: #1d4ed8; margin-top: 0;">INPUT <span class="tag-in">IN</span></h3>
+                    <p>Information computers <strong>get</strong> from users, devices, or other computers.</p>
+                </div>
+                <div style="font-size: 2em; align-self: center;">➔</div>
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; width: 40%; border: 2px solid #86efac;">
+                    <h3 style="color: #15803d; margin-top: 0;">OUTPUT <span class="tag-out">OUT</span></h3>
+                    <p>Information computers <strong>give</strong> to users, devices, or other computers.</p>
+                </div>
+            </div>
+            <p style="text-align: center;"><em>Apps solve problems by taking specific inputs and generating helpful outputs.</em></p>
+        </div>
+
+        <!-- STAGE 5: TEACHER MODEL -->
+        <div class="stage-card">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 5: TEACHER MODEL - I Do (Pet Chooser App)</h2>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div class="app-mockup">
+                    <div class="app-header">Pet Chooser</div>
+                    <div class="app-body">
+                        <button class="btn" style="background:#4b5563; width:80%;">I have a yard</button>
+                        <button class="btn" style="background:#ef4444; width:80%;">I am allergic to fur 👆</button>
+                        <div style="margin-top: 20px; font-size: 3em;">🐢</div>
+                        <p style="text-align: center; font-weight: bold;">You should get a Turtle!</p>
+                    </div>
+                </div>
+                <div>
+                    <h3>Teacher Think-Aloud:</h3>
+                    <p>"When I click the button that says I am allergic to fur, I am providing an <strong style="color:#1d4ed8;">Input</strong>."</p>
+                    <p>"The app takes this button press and displays a picture of a turtle on the screen. The picture of the turtle is the <strong style="color:#15803d;">Output</strong>."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 6: GUIDED PRACTICE -->
+        <div class="stage-card" id="stage6" onclick="startTimer('timer6', 300)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 6: GUIDED PRACTICE - We Do (Story Creator)</h2>
+                <div class="timer" id="timer6">⏱ 5:00</div>
+            </div>
+            <div class="interactive-area">
+                <p>Discuss with your partner: In a "Story Creator" app that asks for your name and favorite animal to write a story about you...</p>
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>Where is the user giving information to the app? (Inputs)</label>
+                    <input type="text" id="wedo-in" placeholder="E.g., typing their name...">
+                </div>
+                <div class="input-group">
+                    <label>Where is the app giving information back? (Outputs)</label>
+                    <input type="text" id="wedo-out" placeholder="E.g., showing the final story on screen...">
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 7: INDEPENDENT APPLICATION -->
+        <div class="stage-card" id="stage7" onclick="startTimer('timer7', 600)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 7: INDEPENDENT APPLICATION - You Do</h2>
+                <div class="timer" id="timer7">⏱ 10:00</div>
+            </div>
+            <p><strong>Design an App I/O:</strong> Brainstorm a new app idea with your partner.</p>
+            <div class="interactive-area">
+                <div class="input-group" style="margin-bottom: 15px;">
+                    <label>What problem does your app solve? (What does it do?)</label>
+                    <textarea id="app-desc" style="min-height: 60px;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label><strong>List 3 specific INPUTS it requires:</strong></label>
+                        <br><em>(Extension: Try to use non-keyboard inputs like GPS or Camera)</em>
+                        <input type="text" style="margin: 5px 0;" placeholder="1.">
+                        <input type="text" style="margin: 5px 0;" placeholder="2.">
+                        <input type="text" style="margin: 5px 0;" placeholder="3.">
+                    </div>
+                    <div>
+                        <label><strong>List 2 specific OUTPUTS it generates:</strong></label>
+                        <br><br>
+                        <input type="text" style="margin: 5px 0;" placeholder="1.">
+                        <input type="text" style="margin: 5px 0;" placeholder="2.">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 8: PROGRESS CHECK -->
+        <div class="stage-card" id="stage8" onclick="startTimer('timer8', 300)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 8: HIGH-IMPACT PROGRESS CHECK</h2>
+                <div class="timer" id="timer8">⏱ 5:00</div>
+            </div>
+            <p>Classify the following actions as Input or Output.</p>
+            <div class="interactive-area" id="quiz-area">
+                <div style="margin-bottom: 10px;">
+                    <strong>1. Typing an address on a keyboard.</strong>
+                    <select id="q1" style="margin-left: 10px;"><option value="">Select...</option><option value="in">Input</option><option value="out">Output</option></select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>2. A song playing from the phone's speakers.</strong>
+                    <select id="q2" style="margin-left: 10px;"><option value="">Select...</option><option value="in">Input</option><option value="out">Output</option></select>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>3. Moving a mouse on a desk.</strong>
+                    <select id="q3" style="margin-left: 10px;"><option value="">Select...</option><option value="in">Input</option><option value="out">Output</option></select>
+                </div>
+                <button class="btn" style="margin-top: 15px;" onclick="checkMCQ()">Submit Check</button>
+                <div id="mcq-fb" style="margin-top: 10px; font-weight: bold;"></div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <strong>Self Assessment:</strong>
+                <div class="traffic-light">
+                    <div class="light green" onclick="selectLight(this, 'Independently')">🟢 Independently</div>
+                    <div class="light yellow" onclick="selectLight(this, 'With Help')">🟡 With Help</div>
+                    <div class="light red" onclick="selectLight(this, 'Need Practice')">🔴 Need Practice</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAGE 9: FEEDBACK -->
+        <div class="stage-card" id="stage9" onclick="startTimer('timer9', 180)">
+            <div class="stage-header">
+                <h2 class="stage-title">STAGE 9: FEEDBACK & ADJUSTMENT</h2>
+                <div class="timer" id="timer9">⏱ 3:00</div>
+            </div>
+            <div class="interactive-area">
+                <label><strong>Reflection:</strong> Look at a smartphone screen. Is the screen itself an input device, an output device, or both? Explain your reasoning.</label>
+                <textarea id="final-reflect" style="min-height: 80px; margin-top: 10px;"></textarea>
+            </div>
+        </div>
+
+         <div class="dashboard" id="final-dashboard">
+            <h2>MISSION COMPLETE: DATA UPLOAD</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <strong>Student:</strong> <span id="dash-name">---</span><br>
+                    <strong>Grade/Sec:</strong> <span id="dash-gradesec">---</span>
+                </div>
+                <div class="stat-box">
+                    <strong>Score:</strong> <span id="dash-score">0</span> / 15<br>
+                </div>
+            </div>
+            <button class="btn" style="width: 100%; margin-top: 20px;" onclick="window.print()">🖨️ PRINT PDF</button>
+        </div>
+
+    </div>
+
+    <script>
+        let score = 0;
+        let timers = {};
+        
+        function startTimer(id, secs) {
+            if (timers[id]) return;
+            let el = document.getElementById(id);
+            el.classList.add('active');
+            timers[id] = setInterval(() => {
+                secs--;
+                let m = Math.floor(secs/60); let s = secs%60;
+                el.innerText = `⏱ ${m}:${s.toString().padStart(2,'0')}`;
+                if(secs<=0) { clearInterval(timers[id]); el.classList.replace('active','danger'); el.innerText="⏱ 0:00";}
+            }, 1000);
+        }
+
+        let vScored = false;
+        function checkVocab2() {
+            if(vScored) return;
+            let val = document.getElementById('vocab-select').value;
+            let fb = document.getElementById('vocab-fb');
+            if(val === 'perseverance') {
+                fb.innerText = "✅ Correct! (3 Marks)"; fb.style.color = "var(--success)"; score+=3; vScored=true;
+            } else {
+                fb.innerText = "❌ Try again. Which word means 'not giving up'?"; fb.style.color = "var(--danger)";
+            }
+            document.getElementById('total-score').innerText = score;
+            document.getElementById('dash-score').innerText = score;
+        }
+
+        let qScored = false;
+        function checkMCQ() {
+            if(qScored) return;
+            let q1 = document.getElementById('q1').value;
+            let q2 = document.getElementById('q2').value;
+            let q3 = document.getElementById('q3').value;
+            let fb = document.getElementById('mcq-fb');
+            
+            if(!q1 || !q2 || !q3) { fb.innerText = "Please answer all 3."; return; }
+
+            let correct = 0;
+            let exp = [];
+            if(q1 === 'in') correct++; else exp.push("1 is Input (you send data to computer).");
+            if(q2 === 'out') correct++; else exp.push("2 is Output (computer sends sound to you).");
+            if(q3 === 'in') correct++; else exp.push("3 is Input (you send movement data to computer).");
+
+            if(correct === 3) {
+                fb.innerText = "✅ All Correct! (12 Marks)"; fb.style.color = "var(--success)"; score+=12; qScored=true;
+            } else {
+                fb.innerHTML = `❌ Score: ${correct}/3. <br>` + exp.join("<br>"); fb.style.color = "var(--danger)";
+            }
+            document.getElementById('total-score').innerText = score;
+            document.getElementById('dash-score').innerText = score;
+        }
+
+        function selectLight(el, lvl) {
+            document.querySelectorAll('.light').forEach(l=>l.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        window.onbeforeprint = function() {
+            document.getElementById('dash-name').innerText = document.getElementById('student-name').value || "No Name";
+            document.getElementById('dash-gradesec').innerText = `${document.getElementById('student-grade').value} / ${document.getElementById('student-section').value}`;
+        };
+    </script>
+</body>
+</html>
